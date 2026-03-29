@@ -1,4 +1,4 @@
-import { Model, QueryFilter, Types, UpdateQuery } from 'mongoose';
+import { Model, QueryFilter, UpdateQuery } from 'mongoose';
 import { AbstractDocument } from './abstract.schema';
 import { Logger, NotFoundException } from '@nestjs/common';
 
@@ -8,11 +8,9 @@ export abstract class AbstractRepository<TDocument extends AbstractDocument> {
   constructor(protected readonly model: Model<TDocument>) {}
 
   async create(document: Omit<TDocument, '_id'>): Promise<TDocument> {
-    const createdDocument = new this.model({
-      ...document,
-      _id: new Types.ObjectId(),
-    });
-    return (await createdDocument.save()).toJSON() as unknown as TDocument;
+    const createdDocument = new this.model(document);
+    const saved = await createdDocument.save();
+    return saved.toObject();
   }
 
   async findOne(queryFilter: QueryFilter<TDocument>): Promise<TDocument> {
