@@ -5,12 +5,12 @@ import { UserDocument } from './users/models/user.schema';
 import { CurrentUser } from './users/decorators/current-user.decorator';
 import type { Response } from 'express';
 
-@Controller()
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
+  @UseGuards(LocalAuthGuard)
   async login(
     @CurrentUser() user: UserDocument,
     @Res({ passthrough: true }) response: Response,
