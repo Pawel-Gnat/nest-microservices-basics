@@ -17,7 +17,7 @@ async function bootstrap() {
     transport: Transport.TCP,
     options: {
       host: '0.0.0.0',
-      port: configService.getOrThrow<number>('TCP_PORT'),
+      port: configService.getOrThrow<number>('PORT'),
     },
   });
   app.useLogger(app.get(Logger));

@@ -5,7 +5,7 @@ import {
   CreatedPaymentIntent,
   StripeClient,
 } from './stripe-client';
-import { CreateChargeDto } from './dto/create-charge.dto';
+import { CreateChargeDto } from '@app/common/dto/create-charge.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -17,16 +17,20 @@ export class PaymentsService {
     );
   }
 
-  createCharge({
+  async createCharge({
     amount,
-    paymentMethodId,
   }: CreateChargeDto): Promise<CreatedPaymentIntent> {
-    return this.stripe.paymentIntents.create({
+    const paymentIntent = await this.stripe.paymentIntents.create({
       amount: Math.round(amount * 100),
-      currency: 'usd',
-      payment_method: paymentMethodId,
+      currency: 'pln',
+      payment_method: 'pm_card_visa',
       confirm: true,
-      payment_method_types: ['card'],
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'never',
+      },
     });
+
+    return paymentIntent;
   }
 }
