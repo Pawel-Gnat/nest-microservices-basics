@@ -8,14 +8,10 @@ import { ClientProxy } from '@nestjs/microservices';
 import { Request } from 'express';
 import { map, Observable, tap } from 'rxjs';
 import { AUTH_SERVICE } from '../constants/services';
+import { UserDto } from '../dto';
 
-interface AuthenticatedUser {
-  userId: string;
-  email: string;
-}
-
-interface AuthenticatedRequest extends Request {
-  user?: AuthenticatedUser;
+interface JwtAuthRequest extends Request {
+  user: UserDto;
   cookies: Record<string, string | undefined>;
 }
 
@@ -24,7 +20,7 @@ export class JwtAuthGuard implements CanActivate {
   constructor(@Inject(AUTH_SERVICE) private readonly authClient: ClientProxy) {}
 
   canActivate(context: ExecutionContext): boolean | Observable<boolean> {
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const request = context.switchToHttp().getRequest<JwtAuthRequest>();
     const jwt = request.cookies?.Authentication;
 
     if (!jwt) {
@@ -32,7 +28,7 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     return this.authClient
-      .send<AuthenticatedUser>('authenticate', { Authentication: jwt })
+      .send<UserDto>('authenticate', { Authentication: jwt })
       .pipe(
         tap((res) => {
           request.user = res;
