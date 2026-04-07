@@ -40,6 +40,7 @@ export class PaymentsService {
 
     this.notificationsService.emit('notify_email', {
       email,
+      text: `Payment successful for amount ${amount}`,
     });
 
     return paymentIntent;
