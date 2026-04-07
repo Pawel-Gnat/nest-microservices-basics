@@ -1,6 +1,6 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { UserDocument } from '../../../../apps/auth/src/users/models/user.schema';
 import { Request } from 'express';
+import { UserDocument } from '../models';
 
 interface RequestWithUser extends Request {
   user: UserDocument;
