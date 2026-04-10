@@ -17,3 +17,7 @@ export class CreateChargeDto {
   @IsNumber()
   amount: number;
 }
+
+export interface CreateChargeResponse {
+  id: string;
+}

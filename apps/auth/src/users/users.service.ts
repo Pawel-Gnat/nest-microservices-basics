@@ -4,26 +4,30 @@ import {
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { User } from '@app/common';
 import { UsersRepository } from './users.repository';
-import bcrypt from 'bcryptjs';
+import { compare, hash } from 'bcryptjs';
+import { CreateUserDto } from './dto/create-user.dto';
 import { GetUserDto } from './dto/get-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly usersRepository: UsersRepository) {}
 
-  async create(createUserDto: CreateUserDto) {
-    await this.validateCreateUserDto(createUserDto);
-    return this.usersRepository.create({
-      ...createUserDto,
-      password: await bcrypt.hash(createUserDto.password, 10),
-    });
+  async create(createUser: CreateUserDto) {
+    await this.validateCreateUser(createUser);
+    const password = await hash(createUser.password, 10);
+    return this.usersRepository.create(
+      new User({
+        email: createUser.email,
+        password,
+      }),
+    );
   }
 
-  private async validateCreateUserDto(createUserDto: CreateUserDto) {
+  private async validateCreateUser(createUser: CreateUserDto) {
     try {
-      await this.usersRepository.findOne({ email: createUserDto.email });
+      await this.usersRepository.findOne({ email: createUser.email });
     } catch (_error: unknown) {
       if (_error instanceof NotFoundException) {
         return;
@@ -36,7 +40,7 @@ export class UsersService {
   async verifyUser(email: string, password: string) {
     try {
       const user = await this.usersRepository.findOne({ email });
-      const passwordMatches = await bcrypt.compare(password, user.password);
+      const passwordMatches = await compare(password, user.password);
 
       if (!passwordMatches) {
         throw new UnauthorizedException('Invalid credentials');
@@ -47,7 +51,7 @@ export class UsersService {
     }
   }
 
-  async getUser(getUserDto: GetUserDto) {
-    return this.usersRepository.findOne(getUserDto);
+  async getUser(getUser: GetUserDto) {
+    return this.usersRepository.findOne({ id: getUser.id });
   }
 }
