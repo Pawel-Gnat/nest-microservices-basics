@@ -7,6 +7,7 @@ COPY pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml ./
 COPY tsconfig.json tsconfig.json
 COPY nest-cli.json nest-cli.json
+COPY apps/auth/package.json apps/auth/package.json
 
 RUN npm install -g pnpm
 
@@ -29,10 +30,13 @@ WORKDIR /usr/src/app
 COPY package.json ./
 COPY pnpm-lock.yaml ./
 COPY pnpm-workspace.yaml ./
+COPY apps/auth/package.json apps/auth/package.json
 
 RUN npm install -g pnpm
 RUN pnpm install --prod
 
 COPY --from=development /usr/src/app/dist ./dist
+COPY --from=development /usr/src/app/apps/auth/prisma.config.ts ./apps/auth/prisma.config.ts
+COPY --from=development /usr/src/app/apps/auth/prisma ./apps/auth/prisma
 
-CMD ["node", "dist/apps/auth/main"]
+CMD ["sh", "-c", "cd apps/auth && pnpm prisma migrate deploy && cd ../.. && node dist/apps/auth/main"]

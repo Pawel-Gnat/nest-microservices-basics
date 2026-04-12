@@ -4,7 +4,8 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import type { Response } from 'express';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { CurrentUser, User, User } from '@app/common';
+import { CurrentUser } from '@app/common';
+import type { User } from './generated/prisma/client';
 
 @Controller('auth')
 export class AuthController {

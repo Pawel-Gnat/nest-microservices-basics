@@ -4,30 +4,30 @@ import {
   UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { User } from '@app/common';
-import { UsersRepository } from './users.repository';
 import { compare, hash } from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
+import { PrismaService } from '../prisma.service';
 import { GetUserDto } from './dto/get-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
-  async create(createUser: CreateUserDto) {
-    await this.validateCreateUser(createUser);
-    const password = await hash(createUser.password, 10);
-    return this.usersRepository.create(
-      new User({
-        email: createUser.email,
-        password,
-      }),
-    );
+  async create(createUserDto: CreateUserDto) {
+    await this.validateCreateUser(createUserDto);
+    return this.prismaService.user.create({
+      data: {
+        email: createUserDto.email,
+        password: await hash(createUserDto.password, 10),
+      },
+    });
   }
 
   private async validateCreateUser(createUser: CreateUserDto) {
     try {
-      await this.usersRepository.findOne({ email: createUser.email });
+      await this.prismaService.user.findFirstOrThrow({
+        where: { email: createUser.email },
+      });
     } catch (_error: unknown) {
       if (_error instanceof NotFoundException) {
         return;
@@ -39,19 +39,27 @@ export class UsersService {
 
   async verifyUser(email: string, password: string) {
     try {
-      const user = await this.usersRepository.findOne({ email });
+      const user = await this.prismaService.user.findFirstOrThrow({
+        where: { email },
+      });
       const passwordMatches = await compare(password, user.password);
-
       if (!passwordMatches) {
         throw new UnauthorizedException('Invalid credentials');
       }
       return user;
-    } catch (error) {
-      throw new UnauthorizedException(error);
+    } catch (_error: unknown) {
+      if (_error instanceof NotFoundException) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+      throw _error;
     }
   }
 
   async getUser(getUser: GetUserDto) {
-    return this.usersRepository.findOne({ id: getUser.id });
+    return this.prismaService.user.findUniqueOrThrow({
+      where: {
+        id: +getUser.id,
+      },
+    });
   }
 }
