@@ -1,27 +1,21 @@
 import { Module } from '@nestjs/common';
 import { ReservationsService } from './reservations.service';
 import { ReservationsController } from './reservations.controller';
-import {
-  DatabaseModule,
-  LoggerModule,
-  AUTH_SERVICE,
-  PAYMENTS_SERVICE,
-} from '@app/common';
-import { ReservationsRepository } from './reservations.repository';
+import { LoggerModule, AUTH_SERVICE, PAYMENTS_SERVICE } from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Joi from 'joi';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { Reservation } from './models/reservation.entity';
+
+import { PrismaService } from './prisma.service';
 
 @Module({
   imports: [
-    DatabaseModule,
-    DatabaseModule.forFeature([Reservation]),
     LoggerModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: 'apps/reservations/.env',
       validationSchema: Joi.object({
+        DATABASE_URL: Joi.string().required(),
         PORT: Joi.number().required(),
         AUTH_HOST: Joi.string().required(),
         AUTH_PORT: Joi.number().required(),
@@ -55,6 +49,6 @@ import { Reservation } from './models/reservation.entity';
     ]),
   ],
   controllers: [ReservationsController],
-  providers: [ReservationsService, ReservationsRepository],
+  providers: [ReservationsService, PrismaService],
 })
 export class ReservationsModule {}
